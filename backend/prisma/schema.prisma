@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User (pour l'instant un seul user en dur)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  notes Note[]
+
+  @@map("users")
+}
+
+// Note avec contenu JSONB
+model Note {
+  id        String   @id @default(uuid())
+  title     String
+  content   Json     @db.JsonB // Format Novel/Tiptap
+  source    String? // Source optionnelle
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Liens bidirectionnels entre notes
+  linksTo    NoteLink[] @relation("NoteLinksTo")
+  linkedFrom NoteLink[] @relation("NoteLinkedFrom")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("notes")
+}
+
+// Table de jointure pour les liens [[note]]
+model NoteLink {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  // Note source (celle qui contient le lien)
+  sourceId String
+  source   Note   @relation("NoteLinksTo", fields: [sourceId], references: [id], onDelete: Cascade)
+
+  // Note cible (celle qui est référencée)
+  targetId String
+  target   Note   @relation("NoteLinkedFrom", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId]) // Éviter les doublons
+  @@index([sourceId])
+  @@index([targetId])
+  @@map("note_links")
+}
