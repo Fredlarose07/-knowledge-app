@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { NotesService } from './notes.service';
+import { LinksService } from './links.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { AuthGuard } from '../auth/auth.guard';
@@ -16,9 +17,12 @@ import { CurrentUser } from '../auth/user.decorator';
 import type { User } from '@prisma/client';
 
 @Controller('notes')
-@UseGuards(AuthGuard) // Protéger toutes les routes du controller
+@UseGuards(AuthGuard)
 export class NotesController {
-  constructor(private readonly notesService: NotesService) {}
+  constructor(
+    private readonly notesService: NotesService,
+    private readonly linksService: LinksService, // ← Injecter LinksService
+  ) {}
 
   @Post()
   create(@CurrentUser() user: User, @Body() createNoteDto: CreateNoteDto) {
@@ -28,6 +32,12 @@ export class NotesController {
   @Get()
   findAll(@CurrentUser() user: User) {
     return this.notesService.findAll(user.id);
+  }
+
+    // Nouvelle route : récupérer les backlinks
+  @Get(':id/backlinks')
+  getBacklinks(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.linksService.getBacklinks(user.id, id);
   }
 
   @Get(':id')

@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { NotesService } from './notes.service';
 import { NotesController } from './notes.controller';
 import { AuthModule } from '../auth/auth.module';
+import { LinksService } from './links.service';
 
 
 @Module({
     imports: [AuthModule], // ← Importer AuthModule pour avoir accès à AuthService
   controllers: [NotesController],
-  providers: [NotesService],
+  providers: [NotesService, LinksService],
 })
 export class NotesModule {}
