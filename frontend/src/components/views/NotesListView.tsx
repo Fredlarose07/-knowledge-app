@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '../ui/Button';
+import { Breadcrumb } from '../ui/Breadcrumb';
 import type { Note } from '../../lib/types';
 
 interface NotesListViewProps {
@@ -20,8 +21,13 @@ export const NotesListView: React.FC<NotesListViewProps> = ({
       {/* Header avec breadcrumb + bouton */}
       <header className="px-32 py-6 mt-8 flex items-center justify-between"
         style={{ borderColor: 'rgba(44, 47, 52, 0.4)' }}>
-        <div className="flex items-center gap-2 text-neutral-300">
-        </div>
+        
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: 'Notes' }
+          ]}
+        />
 
         <Button onClick={onCreateNote}>
           Créer une note
@@ -47,19 +53,16 @@ export const NotesListView: React.FC<NotesListViewProps> = ({
               <button
                 key={note.id}
                 onClick={() => onSelectNote(note.id)}
-                className="w-full text-left px-4 py-2 rounded-lg  hover:bg-neutral-850 transition-colors"
-            
+                className="w-full text-left px-4 py-2 rounded-lg hover:bg-neutral-850 transition-colors"
               >
-                <h3 className="text-15 font-semibold text-neutral-0 ">
+                <h3 className="text-15 font-semibold text-neutral-0">
                   {note.title || 'Sans titre'}
                 </h3>
-
               </button>
             ))}
           </div>
         )}
       </div>
-
     </div>
   );
 };

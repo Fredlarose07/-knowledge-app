@@ -55,7 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
  
 
       {/* Menu Items */}
-      <nav className="flex-1 mt-12  flex flex-col items-center">
+      <nav className="flex-1 mt-12 flex flex-col items-center gap-1">
         {menuItems.map((item) => {
           const isActive = activeSection === item.id;
           
