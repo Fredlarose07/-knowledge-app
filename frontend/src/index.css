@@ -2,13 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import de la font Satochi depuis Google Fonts ou fichiers locaux */
+/* Option 1 : Si tu as les fichiers .woff2 en local */
+
+@font-face {
+  font-family: 'Satochi';
+  src: url('/fonts/Satochi/Satochi-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Satochi';
+  src: url('/fonts/Satochi/Satochi-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+}
+
 body {
   margin: 0;
-  background-color: #0a0a0a;
-  color: #e5e5e5;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: #101011;
+  color: #E2E4E9;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Scrollbar custom (optionnel mais joli) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #121315;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A2D33;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3D4149;
 }

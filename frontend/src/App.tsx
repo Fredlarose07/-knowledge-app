@@ -1,35 +1,32 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+/**
+ * App.tsx - Test de la Sidebar menu de navigation
+ */
+
+import { useState } from 'react';
+import { Sidebar } from './components/layout/Sidebar';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeSection, setActiveSection] = useState('notes');
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="h-screen flex bg-gradient-to-b from-[#08090A] to-[#101011]">
+      {/* Sidebar menu */}
+      <Sidebar 
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+      />
+      
+      {/* Zone principale */}
+      <main className="flex-1 flex items-center justify-center text-neutral-500">
+        <div className="text-center">
+          <p className="text-15 mb-2">Section active : <span className="text-neutral-0 font-bold">{activeSection}</span></p>
+          <p className="text-13 text-neutral-600">
+            Clique sur Notes / Mocs / Schemas dans le menu 👈
+          </p>
+        </div>
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
