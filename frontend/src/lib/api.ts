@@ -10,7 +10,7 @@ import type {
 
 // Configuration Axios
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'http://localhost:3001',
   headers: {
     'Content-Type': 'application/json',
   },

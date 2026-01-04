@@ -55,7 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
  
 
       {/* Menu Items */}
-      <nav className="flex-1 py-2">
+      <nav className="flex-1 mt-12  flex flex-col items-center">
         {menuItems.map((item) => {
           const isActive = activeSection === item.id;
           
@@ -63,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange
             <button
               key={item.id}
               onClick={() => onSectionChange(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-2 text-13 font-medium transition-colors ${
+              className={`w-[85%] flex items-center gap-3 px-4 py-2 text-13 font-medium transition-colors rounded-md ${
                 isActive
                   ? 'bg-neutral-900 text-neutral-0'
                   : 'text-[#9BA0AB] hover:text-neutral-0'
