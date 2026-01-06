@@ -9,7 +9,7 @@ import type { NoteDetailResponse } from '../lib/types';
 export default function NoteEditorPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   const [activeSection] = useState('notes');
   const [note, setNote] = useState<NoteDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,7 +47,7 @@ export default function NoteEditorPage() {
   if (loading) {
     return (
       <div className="h-screen flex bg-gradient-to-b from-[#08090A] to-[#101011]">
-        <Sidebar activeSection={activeSection} onSectionChange={() => {}} />
+        <Sidebar activeSection={activeSection} onSectionChange={() => { }} />
         <main className="flex-1 flex items-center justify-center">
           <p className="text-neutral-500">Chargement...</p>
         </main>
@@ -61,8 +61,8 @@ export default function NoteEditorPage() {
 
   return (
     <div className="h-screen flex bg-gradient-to-b from-[#08090A] to-[#101011]">
-      <Sidebar activeSection={activeSection} onSectionChange={() => {}} />
-      
+      <Sidebar activeSection={activeSection} onSectionChange={() => { }} />
+
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header avec breadcrumb */}
         <PageHeader
@@ -119,11 +119,26 @@ export default function NoteEditorPage() {
 
         {/* Footer sticky en bas */}
         <div className="px-32 py-6">
-          {/* Button Source */}
-          <Button variant="secondary" className="mb-4">
+          {/* Button Source avec icon */}
+          <Button
+            variant="secondary"
+            size="small"
+            icon={
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                />
+              </svg>
+            }
+            iconPosition="left"
+            className="mb-4"
+          >
             Source
           </Button>
-          
+
           {/* Stroke + contenu source */}
           <div className="border-t border-neutral-800 pt-6">
             {note.source && (
