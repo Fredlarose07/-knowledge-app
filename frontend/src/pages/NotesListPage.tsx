@@ -8,7 +8,6 @@ import type { Note } from '../lib/types';
 
 export default function NotesListPage() {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('notes');
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,8 +40,6 @@ export default function NotesListPage() {
       
       await loadNotes();
       navigate(`/notes/${newNote.id}`);
-      
-      console.log('Note créée:', newNote);
     } catch (error) {
       console.error('Erreur création note:', error);
       alert('Impossible de créer la note');
@@ -55,37 +52,21 @@ export default function NotesListPage() {
 
   return (
     <div className="h-screen flex bg-gradient-to-b from-[#08090A] to-[#101011]">
-      <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <Sidebar />
       
       <main className="flex-1 flex flex-col">
-        {activeSection === 'notes' && (
-          <>
-            <PageHeader
-              breadcrumbItems={[{ label: 'Notes' }]}
-              action={{
-                label: 'Créer une note',
-                onClick: handleCreateNote
-              }}
-            />
-            <NotesListView
-              notes={notes}
-              loading={loading}
-              onSelectNote={handleSelectNote}
-            />
-          </>
-        )}
-
-        {activeSection === 'mocs' && (
-          <div className="h-full flex items-center justify-center text-neutral-500">
-            <p className="text-15">Section Mocs (à venir)</p>
-          </div>
-        )}
-
-        {activeSection === 'schemas' && (
-          <div className="h-full flex items-center justify-center text-neutral-500">
-            <p className="text-15">Section Schemas (à venir)</p>
-          </div>
-        )}
+        <PageHeader
+          breadcrumbItems={[{ label: 'Notes' }]}
+          action={{
+            label: 'Créer une note',
+            onClick: handleCreateNote
+          }}
+        />
+        <NotesListView
+          notes={notes}
+          loading={loading}
+          onSelectNote={handleSelectNote}
+        />
       </main>
     </div>
   );

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/layout/Sidebar';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '../components/ui/Button';
+import { NoteEditor } from '../components/editor/NoteEditor';
 import { notesApi } from '../lib/api';
 import type { NoteDetailResponse } from '../lib/types';
 
@@ -10,9 +11,15 @@ export default function NoteEditorPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [activeSection] = useState('notes');
   const [note, setNote] = useState<NoteDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState<any>(null);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'idle'>('idle');
+  
+  // Timers pour le debounce
+  const saveTimerRef = useRef<number | null>(null);
+  const titleSaveTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -20,13 +27,15 @@ export default function NoteEditorPage() {
       return;
     }
     loadNote(id);
-  }, [id]);
+  }, [id, navigate]);
 
   const loadNote = async (noteId: string) => {
     try {
       setLoading(true);
       const data = await notesApi.getNoteById(noteId);
       setNote(data);
+      setTitle(data.title);
+      setContent(data.content);
     } catch (error) {
       console.error('Erreur chargement note:', error);
       alert('Impossible de charger la note');
@@ -35,6 +44,69 @@ export default function NoteEditorPage() {
       setLoading(false);
     }
   };
+
+  // Fonction pour sauvegarder
+  const saveNote = async (noteId: string, updates: { title?: string; content?: any }) => {
+    try {
+      setSaveStatus('saving');
+      await notesApi.updateNote(noteId, updates);
+      setSaveStatus('saved');
+      
+      // Repasser à 'idle' après 2 secondes
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Erreur sauvegarde:', error);
+      setSaveStatus('idle');
+      alert('Erreur lors de la sauvegarde');
+    }
+  };
+
+  // Gérer les changements de titre avec debounce
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+    
+    // Annuler le timer précédent
+    if (titleSaveTimerRef.current) {
+      clearTimeout(titleSaveTimerRef.current);
+    }
+    
+    // Créer un nouveau timer pour sauvegarder après 1 seconde
+    titleSaveTimerRef.current = setTimeout(() => {
+      if (id) {
+        saveNote(id, { title: newTitle });
+      }
+    }, 1000);
+  }, [id]);
+
+  // Gérer les changements de contenu avec debounce
+  const handleContentChange = useCallback((newContent: any) => {
+    setContent(newContent);
+    
+    // Annuler le timer précédent
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+    
+    // Créer un nouveau timer pour sauvegarder après 1 seconde
+    saveTimerRef.current = setTimeout(() => {
+      if (id) {
+        saveNote(id, { content: newContent });
+      }
+    }, 1000);
+  }, [id]);
+
+  // Nettoyer les timers au démontage
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+      if (titleSaveTimerRef.current) {
+        clearTimeout(titleSaveTimerRef.current);
+      }
+    };
+  }, []);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -47,7 +119,7 @@ export default function NoteEditorPage() {
   if (loading) {
     return (
       <div className="h-screen flex bg-gradient-to-b from-[#08090A] to-[#101011]">
-        <Sidebar activeSection={activeSection} onSectionChange={() => { }} />
+        <Sidebar />
         <main className="flex-1 flex items-center justify-center">
           <p className="text-neutral-500">Chargement...</p>
         </main>
@@ -61,42 +133,50 @@ export default function NoteEditorPage() {
 
   return (
     <div className="h-screen flex bg-gradient-to-b from-[#08090A] to-[#101011]">
-      <Sidebar activeSection={activeSection} onSectionChange={() => { }} />
+      <Sidebar />
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header avec breadcrumb */}
         <PageHeader
           breadcrumbItems={[
             { label: 'Notes', onClick: () => navigate('/notes') },
-            { label: note.title }
+            { label: title || 'Sans titre' }
           ]}
         />
 
-        {/* Zone scrollable */}
         <div className="flex-1 overflow-y-auto px-32">
-          {/* Titre - 24px */}
-          <h1 className="text-24 font-semibold text-neutral-0 mb-2">
-            {note.title}
-          </h1>
+          {/* Titre éditable + indicateur de sauvegarde */}
+          <div className="flex items-center gap-4 mb-2">
+            <input
+              type="text"
+              value={title}
+              onChange={handleTitleChange}
+              placeholder="Sans titre"
+              className="flex-1 text-24 font-semibold text-neutral-0 bg-transparent border-none outline-none focus:outline-none"
+            />
+            
+            {/* Indicateur de sauvegarde */}
+            {saveStatus === 'saving' && (
+              <span className="text-13 text-neutral-500">Enregistrement...</span>
+            )}
+            {saveStatus === 'saved' && (
+              <span className="text-13 text-green-500">✓ Enregistré</span>
+            )}
+          </div>
 
-          {/* Date de création - 13px */}
-          <p className="text-13 text-neutral-500 mb-12">
+          {/* Date de création */}
+          <p className="text-13 text-neutral-500 mb-6">
             Créé le {formatDate(note.createdAt)}
           </p>
 
-          {/* Contenu - Temporaire avant Novel */}
-          <div className="text-neutral-200 text-16 leading-relaxed mb-16">
-            <p className="mb-4 text-neutral-400">
-              📝 Zone d'édition (Novel à venir)
-            </p>
-            <div className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-6">
-              <pre className="text-13 text-neutral-400 overflow-auto">
-                {JSON.stringify(note.content, null, 2)}
-              </pre>
-            </div>
+          {/* Éditeur Novel */}
+          <div className="mb-16">
+            <NoteEditor
+              content={content}
+              onChange={handleContentChange}
+            />
           </div>
 
-          {/* Backlinks (si présents) */}
+          {/* Backlinks */}
           {note.linkedFrom && note.linkedFrom.length > 0 && (
             <div className="mt-12 pt-8 border-t border-neutral-800">
               <p className="text-13 font-medium text-neutral-400 mb-4">
@@ -117,9 +197,8 @@ export default function NoteEditorPage() {
           )}
         </div>
 
-        {/* Footer sticky en bas */}
+        {/* Footer sticky */}
         <div className="px-32 py-6">
-          {/* Button Source avec icon */}
           <Button
             variant="secondary"
             size="small"
@@ -139,7 +218,6 @@ export default function NoteEditorPage() {
             Source
           </Button>
 
-          {/* Stroke + contenu source */}
           <div className="border-t border-neutral-800 pt-6">
             {note.source && (
               <p className="text-15 text-neutral-300">{note.source}</p>
