@@ -15,11 +15,13 @@ export default function NoteEditorPage() {
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState<any>(null);
+  const [source, setSource] = useState('');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'idle'>('idle');
-  
+
   // Timers pour le debounce
   const saveTimerRef = useRef<number | null>(null);
   const titleSaveTimerRef = useRef<number | null>(null);
+  const sourceSaveTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -36,6 +38,7 @@ export default function NoteEditorPage() {
       setNote(data);
       setTitle(data.title);
       setContent(data.content);
+      setSource(data.source || '');
     } catch (error) {
       console.error('Erreur chargement note:', error);
       alert('Impossible de charger la note');
@@ -46,12 +49,12 @@ export default function NoteEditorPage() {
   };
 
   // Fonction pour sauvegarder
-  const saveNote = async (noteId: string, updates: { title?: string; content?: any }) => {
+  const saveNote = async (noteId: string, updates: { title?: string; content?: any; source?: string }) => {
     try {
       setSaveStatus('saving');
       await notesApi.updateNote(noteId, updates);
       setSaveStatus('saved');
-      
+
       // Repasser à 'idle' après 2 secondes
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
@@ -65,13 +68,11 @@ export default function NoteEditorPage() {
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    
-    // Annuler le timer précédent
+
     if (titleSaveTimerRef.current) {
       clearTimeout(titleSaveTimerRef.current);
     }
-    
-    // Créer un nouveau timer pour sauvegarder après 1 seconde
+
     titleSaveTimerRef.current = setTimeout(() => {
       if (id) {
         saveNote(id, { title: newTitle });
@@ -82,16 +83,30 @@ export default function NoteEditorPage() {
   // Gérer les changements de contenu avec debounce
   const handleContentChange = useCallback((newContent: any) => {
     setContent(newContent);
-    
-    // Annuler le timer précédent
+
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }
-    
-    // Créer un nouveau timer pour sauvegarder après 1 seconde
+
     saveTimerRef.current = setTimeout(() => {
       if (id) {
         saveNote(id, { content: newContent });
+      }
+    }, 1000);
+  }, [id]);
+
+  // Gérer les changements de source avec debounce
+  const handleSourceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSource = e.target.value;
+    setSource(newSource);
+
+    if (sourceSaveTimerRef.current) {
+      clearTimeout(sourceSaveTimerRef.current);
+    }
+
+    sourceSaveTimerRef.current = setTimeout(() => {
+      if (id) {
+        saveNote(id, { source: newSource });
       }
     }, 1000);
   }, [id]);
@@ -105,6 +120,9 @@ export default function NoteEditorPage() {
       if (titleSaveTimerRef.current) {
         clearTimeout(titleSaveTimerRef.current);
       }
+      if (sourceSaveTimerRef.current) {
+        clearTimeout(sourceSaveTimerRef.current);
+      }
     };
   }, []);
 
@@ -115,6 +133,27 @@ export default function NoteEditorPage() {
       month: 'short',
     }).format(date);
   };
+
+    // Gérer les clics sur les [[liens]]
+  const handleMentionClick = useCallback(async (noteName: string) => {
+    try {
+      // Chercher la note par son titre
+      const notes = await notesApi.getAllNotes();
+      const targetNote = notes.find(
+        n => n.title.toLowerCase() === noteName.toLowerCase()
+      );
+
+      if (targetNote) {
+        navigate(`/notes/${targetNote.id}`);
+      } else {
+        alert(`Note "${noteName}" introuvable`);
+      }
+    } catch (error) {
+      console.error('Erreur recherche note:', error);
+    }
+  }, [navigate]);
+
+
 
   if (loading) {
     return (
@@ -130,6 +169,7 @@ export default function NoteEditorPage() {
   if (!note) {
     return null;
   }
+
 
   return (
     <div className="h-screen flex bg-gradient-to-b from-[#08090A] to-[#101011]">
@@ -153,7 +193,7 @@ export default function NoteEditorPage() {
               placeholder="Sans titre"
               className="flex-1 text-24 font-semibold text-neutral-0 bg-transparent border-none outline-none focus:outline-none"
             />
-            
+
             {/* Indicateur de sauvegarde */}
             {saveStatus === 'saving' && (
               <span className="text-13 text-neutral-500">Enregistrement...</span>
@@ -173,32 +213,14 @@ export default function NoteEditorPage() {
             <NoteEditor
               content={content}
               onChange={handleContentChange}
+              onMentionClick={handleMentionClick}
             />
           </div>
-
-          {/* Backlinks */}
-          {note.linkedFrom && note.linkedFrom.length > 0 && (
-            <div className="mt-12 pt-8 border-t border-neutral-800">
-              <p className="text-13 font-medium text-neutral-400 mb-4">
-                Mentionné dans {note.linkedFrom.length} note(s)
-              </p>
-              <div className="space-y-2">
-                {note.linkedFrom.map((link) => (
-                  <button
-                    key={link.id}
-                    onClick={() => navigate(`/notes/${link.sourceId}`)}
-                    className="block text-15 text-primary-500 hover:text-primary-400 transition-colors"
-                  >
-                    → {link.source?.title || 'Note sans titre'}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Footer sticky */}
+        {/* Footer sticky avec Source éditable */}
         <div className="px-32 py-6">
+          {/* Button Source */}
           <Button
             variant="secondary"
             size="small"
@@ -218,10 +240,15 @@ export default function NoteEditorPage() {
             Source
           </Button>
 
+          {/* Stroke + input source éditable */}
           <div className="border-t border-neutral-800 pt-6">
-            {note.source && (
-              <p className="text-15 text-neutral-300">{note.source}</p>
-            )}
+            <input
+              type="text"
+              value={source}
+              onChange={handleSourceChange}
+              placeholder="Ajouter une source (URL, livre, article...)"
+              className="w-full text-15 text-neutral-300 bg-transparent border-none outline-none focus:outline-none placeholder:text-neutral-600"
+            />
           </div>
         </div>
       </main>

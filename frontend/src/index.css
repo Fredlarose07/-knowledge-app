@@ -111,3 +111,32 @@ body {
   background-color: transparent;
   padding: 0;
 }
+
+/* Mode lecture : afficher sans crochets */
+.note-mention-link-display {
+  color: transparent !important;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0;
+  position: relative;
+}
+
+.note-mention-link-display::before {
+  content: attr(data-note-display);
+  font-size: 1rem;
+  color: #6C78E6;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.note-mention-link-display:hover::before {
+  color: #575BC7;
+  text-decoration: underline;
+}
+
+/* Mode édition : afficher normalement avec crochets */
+.note-mention-link-editing {
+  color: #6C78E6;
+  font-weight: 400;
+}
