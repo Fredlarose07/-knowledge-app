@@ -1,6 +1,5 @@
 /**
- * NoteMentionExtension - Extension pour [[liens]] cliquables
- * Crochets visibles en mode édition, cachés sinon
+ * NoteMentionExtension - Détection [[liens]] avec Cmd/Ctrl+Clic
  */
 
 import { Node } from '@tiptap/core';
@@ -28,17 +27,11 @@ export const NoteMention = Node.create<NoteMentionOptions>({
         key: new PluginKey('noteMentionHighlight'),
         state: {
           init(_, { doc }) {
-            return buildDecorations(doc, null);
+            return buildDecorations(doc);
           },
           apply(tr, set) {
-            if (!tr.docChanged && !tr.selectionSet) {
-              return set;
-            }
-            
-            const { selection } = tr;
-            const cursorPos = selection.empty ? selection.$anchor.pos : null;
-            
-            return buildDecorations(tr.doc, cursorPos);
+            if (!tr.docChanged) return set;
+            return buildDecorations(tr.doc);
           },
         },
         props: {
@@ -46,18 +39,19 @@ export const NoteMention = Node.create<NoteMentionOptions>({
             return this.getState(state);
           },
           
-          // Gérer les clics
           handleDOMEvents: {
             click: (view, event) => {
               const target = event.target as HTMLElement;
               
-              // Vérifier si on a cliqué sur un lien (mode lecture)
-              if (target.classList.contains('note-mention-link-display')) {
-                const noteName = target.getAttribute('data-note-display');
+              // Cmd (Mac) ou Ctrl (Windows/Linux) + Clic
+              const isModifierClick = event.metaKey || event.ctrlKey;
+              
+              if (isModifierClick && target.classList.contains('note-mention-link')) {
+                const text = target.textContent || '';
+                const match = text.match(/\[\[([^\]]+)\]\]/);
                 
-                if (noteName && self.options.onMentionClick) {
-                  console.log('Clic sur lien:', noteName);
-                  self.options.onMentionClick(noteName);
+                if (match && match[1] && self.options.onMentionClick) {
+                  self.options.onMentionClick(match[1]);
                   event.preventDefault();
                   return true;
                 }
@@ -70,7 +64,7 @@ export const NoteMention = Node.create<NoteMentionOptions>({
       }),
     ];
     
-    function buildDecorations(doc: any, cursorPos: number | null) {
+    function buildDecorations(doc: any) {
       const decorations: Decoration[] = [];
       const regex = /\[\[([^\]]+)\]\]/g;
 
@@ -80,29 +74,12 @@ export const NoteMention = Node.create<NoteMentionOptions>({
           while ((match = regex.exec(node.text)) !== null) {
             const from = pos + match.index;
             const to = from + match[0].length;
-            const noteName = match[1];
             
-            // Vérifier si le curseur est dans le lien
-            const cursorInLink = cursorPos !== null && 
-              cursorPos >= from && 
-              cursorPos <= to;
-            
-            if (cursorInLink) {
-              // Mode édition : afficher normalement avec style
-              decorations.push(
-                Decoration.inline(from, to, {
-                  class: 'note-mention-link-editing',
-                })
-              );
-            } else {
-              // Mode lecture : afficher sans crochets
-              decorations.push(
-                Decoration.inline(from, to, {
-                  class: 'note-mention-link-display',
-                  'data-note-display': noteName,
-                })
-              );
-            }
+            decorations.push(
+              Decoration.inline(from, to, {
+                class: 'note-mention-link',
+              })
+            );
           }
         }
       });

@@ -134,7 +134,7 @@ export default function NoteEditorPage() {
     }).format(date);
   };
 
-    // Gérer les clics sur les [[liens]]
+  // Gérer les clics sur les [[liens]]
   const handleMentionClick = useCallback(async (noteName: string) => {
     try {
       // Chercher la note par son titre
@@ -144,7 +144,8 @@ export default function NoteEditorPage() {
       );
 
       if (targetNote) {
-        navigate(`/notes/${targetNote.id}`);
+        // Naviguer sans recharger
+        navigate(`/notes/${targetNote.id}`, { replace: false });
       } else {
         alert(`Note "${noteName}" introuvable`);
       }
@@ -152,7 +153,6 @@ export default function NoteEditorPage() {
       console.error('Erreur recherche note:', error);
     }
   }, [navigate]);
-
 
 
   if (loading) {

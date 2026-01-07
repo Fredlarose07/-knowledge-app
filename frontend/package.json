@@ -10,9 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@milkdown/plugin-cursor": "^7.18.0",
+    "@milkdown/plugin-tooltip": "^7.18.0",
     "@tiptap/extension-placeholder": "^2.27.1",
+    "@tiptap/react": "^2.27.1",
+    "@tiptap/starter-kit": "^2.27.1",
     "axios": "^1.13.2",
-    "novel": "^1.0.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.11.0"

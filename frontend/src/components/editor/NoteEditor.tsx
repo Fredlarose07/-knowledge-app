@@ -1,5 +1,5 @@
 /**
- * NoteEditor - Éditeur riche avec Tiptap
+ * NoteEditor - Éditeur Tiptap simple avec [[liens]]
  */
 
 import { useEditor, EditorContent } from '@tiptap/react';
