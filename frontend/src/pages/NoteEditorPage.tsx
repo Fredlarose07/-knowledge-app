@@ -4,6 +4,7 @@ import { Sidebar } from '../components/layout/Sidebar';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '../components/ui/Button';
 import { NoteEditor } from '../components/editor/NoteEditor';
+import { SourceModal } from '../components/modals/SourceModal';
 import { notesApi } from '../lib/api';
 import type { NoteDetailResponse } from '../lib/types';
 
@@ -17,11 +18,11 @@ export default function NoteEditorPage() {
   const [content, setContent] = useState<any>(null);
   const [source, setSource] = useState('');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'idle'>('idle');
+  const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
 
   // Timers pour le debounce
   const saveTimerRef = useRef<number | null>(null);
   const titleSaveTimerRef = useRef<number | null>(null);
-  const sourceSaveTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -95,21 +96,13 @@ export default function NoteEditorPage() {
     }, 1000);
   }, [id]);
 
-  // Gérer les changements de source avec debounce
-  const handleSourceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newSource = e.target.value;
+  // Gérer la sauvegarde de la source
+  const handleSourceSave = (newSource: string) => {
     setSource(newSource);
-
-    if (sourceSaveTimerRef.current) {
-      clearTimeout(sourceSaveTimerRef.current);
+    if (id) {
+      saveNote(id, { source: newSource });
     }
-
-    sourceSaveTimerRef.current = setTimeout(() => {
-      if (id) {
-        saveNote(id, { source: newSource });
-      }
-    }, 1000);
-  }, [id]);
+  };
 
   // Nettoyer les timers au démontage
   useEffect(() => {
@@ -119,9 +112,6 @@ export default function NoteEditorPage() {
       }
       if (titleSaveTimerRef.current) {
         clearTimeout(titleSaveTimerRef.current);
-      }
-      if (sourceSaveTimerRef.current) {
-        clearTimeout(sourceSaveTimerRef.current);
       }
     };
   }, []);
@@ -157,9 +147,9 @@ export default function NoteEditorPage() {
 
   if (loading) {
     return (
-      <div className="h-screen flex bg-gradient-to-b from-[#08090A] to-[#101011]">
+      <div className="h-screen flex">
         <Sidebar />
-        <main className="flex-1 flex items-center justify-center">
+        <main className="flex-1 flex items-center justify-center bg-gradient-to-b from-[#08090A] to-[#101011]">
           <p className="text-neutral-500">Chargement...</p>
         </main>
       </div>
@@ -172,16 +162,30 @@ export default function NoteEditorPage() {
 
 
   return (
-    <div className="h-screen flex bg-gradient-to-b from-[#08090A] to-[#101011]">
+    <div className="h-screen flex">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <PageHeader
-          breadcrumbItems={[
-            { label: 'Notes', onClick: () => navigate('/notes') },
-            { label: title || 'Sans titre' }
-          ]}
-        />
+      <main className="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-[#08090A] to-[#101011]">
+        <PageHeader breadcrumbItems={[]}>
+          <Button
+            variant="secondary"
+            size="small"
+            icon={
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+            }
+            iconPosition="left"
+            onClick={() => navigate('/notes')}
+          >
+            Retour
+          </Button>
+        </PageHeader>
 
         <div className="flex-1 overflow-y-auto px-32">
           {/* Titre éditable + indicateur de sauvegarde */}
@@ -191,7 +195,7 @@ export default function NoteEditorPage() {
               value={title}
               onChange={handleTitleChange}
               placeholder="Sans titre"
-              className="flex-1 text-24 font-semibold text-neutral-0 bg-transparent border-none outline-none focus:outline-none"
+              className="flex-1 text-24 font-semibold text-neutral-0 bg-transparent border-none outline-none focus:outline-none placeholder:text-[#565A64]"
             />
 
             {/* Indicateur de sauvegarde */}
@@ -204,7 +208,7 @@ export default function NoteEditorPage() {
           </div>
 
           {/* Date de création */}
-          <p className="text-13 text-neutral-500 mb-6">
+          <p className="text-13 font-medium text-[#565A64] mb-6">
             Créé le {formatDate(note.createdAt)}
           </p>
 
@@ -214,13 +218,13 @@ export default function NoteEditorPage() {
               content={content}
               onChange={handleContentChange}
               onMentionClick={handleMentionClick}
+              placeholder="Expliquez le concept avec vos mots..."
             />
           </div>
         </div>
 
-        {/* Footer sticky avec Source éditable */}
-        <div className="px-32 py-6">
-          {/* Button Source */}
+        {/* Footer avec bouton Source */}
+        <div className="px-32 py-6 border-t border-neutral-800">
           <Button
             variant="secondary"
             size="small"
@@ -229,29 +233,26 @@ export default function NoteEditorPage() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                 />
               </svg>
             }
             iconPosition="left"
-            className="mb-4"
+            onClick={() => setIsSourceModalOpen(true)}
           >
-            Source
+            {source ? 'Modifier la source' : 'Ajouter une source'}
           </Button>
-
-          {/* Stroke + input source éditable */}
-          <div className="border-t border-neutral-800 pt-6">
-            <input
-              type="text"
-              value={source}
-              onChange={handleSourceChange}
-              placeholder="Ajouter une source (URL, livre, article...)"
-              className="w-full text-15 text-neutral-300 bg-transparent border-none outline-none focus:outline-none placeholder:text-neutral-600"
-            />
-          </div>
         </div>
       </main>
+
+      {/* Modal Source */}
+      <SourceModal
+        isOpen={isSourceModalOpen}
+        onClose={() => setIsSourceModalOpen(false)}
+        source={source}
+        onSave={handleSourceSave}
+      />
     </div>
   );
 }

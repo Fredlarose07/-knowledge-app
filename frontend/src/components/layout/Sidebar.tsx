@@ -61,7 +61,7 @@ export const Sidebar: React.FC = () => {
   const currentSection = getActiveSection();
 
   return (
-    <aside className="w-[240px] bg-gradient-to-b from-[#08090A] to-[#101011] border-r flex flex-col" 
+    <aside className="w-[240px] bg-gradient-to-b from-[#0c0e0f] to-[#101011] border-r flex flex-col" 
       style={{ borderColor: 'rgba(44, 47, 52, 0.4)' }}>
       
       {/* Menu Items */}

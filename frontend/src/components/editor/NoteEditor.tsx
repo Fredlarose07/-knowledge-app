@@ -13,6 +13,7 @@ interface NoteEditorProps {
   onChange: (content: any) => void;
   onMentionClick?: (noteName: string) => void;
   editable?: boolean;
+  placeholder?: string;  // ← Ajout de la prop placeholder
 }
 
 export const NoteEditor: React.FC<NoteEditorProps> = ({
@@ -20,6 +21,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   onChange,
   onMentionClick,
   editable = true,
+  placeholder = "Tapez '/' pour les commandes ou commencez à écrire...",  // ← Valeur par défaut
 }) => {
   const editor = useEditor({
     extensions: [
@@ -29,7 +31,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         },
       }),
       Placeholder.configure({
-        placeholder: "Tapez '/' pour les commandes ou commencez à écrire...",
+        placeholder,  // ← Utilise la prop au lieu de la valeur en dur
       }),
       NoteMention.configure({
         onMentionClick,

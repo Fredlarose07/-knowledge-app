@@ -13,21 +13,22 @@ interface BreadcrumbItem {
 }
 
 interface PageHeaderProps {
-  breadcrumbItems: BreadcrumbItem[];
+  breadcrumbItems?: BreadcrumbItem[];  // Maintenant optionnel
   action?: {
     label: string;
     onClick: () => void;
   };
+  children?: React.ReactNode;  // Ajout du support children
 }
 
-export const PageHeader: React.FC<PageHeaderProps> = ({ breadcrumbItems, action }) => {
+export const PageHeader: React.FC<PageHeaderProps> = ({ breadcrumbItems, action, children }) => {
   return (
     <header 
       className="px-32 py-6 mt-8 flex items-start justify-between"
       style={{ borderColor: 'rgba(44, 47, 52, 0.4)' }}
     >
-      {/* Breadcrumb */}
-      <Breadcrumb items={breadcrumbItems} />
+      {/* Si children existe, l'afficher, sinon afficher le breadcrumb */}
+      {children ? children : breadcrumbItems && <Breadcrumb items={breadcrumbItems} />}
 
       {/* Action (bouton optionnel) */}
       {action && (

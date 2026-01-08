@@ -17,7 +17,7 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const baseStyles = 'rounded-[6px] font-semibold transition-colors duration-200 inline-flex items-center';
+  const baseStyles = 'rounded-[6px] font-medium transition-colors duration-200 inline-flex items-center';
   
   // Tailles
   const sizeStyles = {
