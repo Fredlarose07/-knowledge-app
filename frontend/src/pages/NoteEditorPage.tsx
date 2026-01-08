@@ -165,7 +165,7 @@ export default function NoteEditorPage() {
     <div className="h-screen flex">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-[#08090A] to-[#101011]">
+      <main className="flex-1 flex flex-col overflow-hidden ]">
         <PageHeader breadcrumbItems={[]}>
           <Button
             variant="secondary"
