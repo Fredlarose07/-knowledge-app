@@ -1,3 +1,5 @@
+// frontend/src/components/views/NotesListView.tsx
+
 import React from 'react';
 import type { Note } from '../../lib/types';
 
@@ -13,7 +15,7 @@ export const NotesListView: React.FC<NotesListViewProps> = ({
   loading = false,
 }) => {
   return (
-    <div className="flex-1 overflow-y-auto px-32">
+    <div className="px-32 py-8">
       {loading ? (
         <div className="text-center text-neutral-500 py-8">
           Chargement des notes...
@@ -26,7 +28,7 @@ export const NotesListView: React.FC<NotesListViewProps> = ({
           </p>
         </div>
       ) : (
-        <div className="">
+        <div className="space-y-2">
           {notes.map((note) => (
             <button
               key={note.id}

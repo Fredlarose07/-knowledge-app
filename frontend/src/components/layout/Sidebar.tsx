@@ -1,7 +1,4 @@
-/**
- * Sidebar - Menu de navigation principal
- * La section active est déterminée automatiquement par l'URL
- */
+// frontend/src/components/layout/Sidebar.tsx
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -50,7 +47,6 @@ export const Sidebar: React.FC = () => {
     },
   ];
 
-  // Déterminer la section active en fonction de l'URL
   const getActiveSection = () => {
     if (location.pathname.startsWith('/notes')) return 'notes';
     if (location.pathname.startsWith('/mocs')) return 'mocs';
@@ -61,10 +57,10 @@ export const Sidebar: React.FC = () => {
   const currentSection = getActiveSection();
 
   return (
-    <aside className="w-[240px] bg-gradient-to-b from-[#0c0e0f] to-[#101011] border-r flex flex-col" 
-      style={{ borderColor: 'rgba(44, 47, 52, 0.4)' }}>
-      
-      {/* Menu Items */}
+    <aside 
+      className="fixed left-0 top-0 h-screen w-[240px] bg-gradient-to-b from-[#0c0e0f] to-[#101011] border-r flex flex-col z-10" 
+      style={{ borderColor: 'rgba(44, 47, 52, 0.4)' }}
+    >
       <nav className="flex-1 mt-12 flex flex-col items-center gap-1">
         {menuItems.map((item) => {
           const isActive = currentSection === item.id;
