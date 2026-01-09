@@ -7,6 +7,7 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '../components/ui/Button';
 import { NoteEditor } from '../components/editor/NoteEditor';
 import { SourceModal } from '../components/modals/SourceModal';
+import { DeleteConfirmModal } from '../components/modals/DeleteConfirmModal';
 import { notesApi } from '../lib/api';
 import type { NoteDetailResponse } from '../lib/types';
 
@@ -21,6 +22,8 @@ export default function NoteEditorPage() {
   const [source, setSource] = useState('');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'idle'>('idle');
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const saveTimerRef = useRef<number | null>(null);
   const titleSaveTimerRef = useRef<number | null>(null);
@@ -99,6 +102,20 @@ export default function NoteEditorPage() {
     }
   };
 
+  const handleDeleteNote = async () => {
+    if (!id) return;
+    
+    try {
+      setIsDeleting(true);
+      await notesApi.deleteNote(id);
+      navigate('/notes');
+    } catch (error) {
+      console.error('Erreur suppression note:', error);
+      alert('Impossible de supprimer la note');
+      setIsDeleting(false);
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (saveTimerRef.current) {
@@ -156,24 +173,41 @@ export default function NoteEditorPage() {
 
       <main className="ml-[240px]">
         <PageHeader breadcrumbItems={[]}>
-          <Button
-            variant="secondary"
-            size="small"
-            icon={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="small"
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+              }
+              iconPosition="left"
+              onClick={() => navigate('/notes')}
+            >
+              Retour
+            </Button>
+            
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="p-1.5 rounded-lg bg-[#1E2025] hover:bg-neutral-750 border border-[#2A2D33] text-neutral-400 hover:text-red-500 transition-colors"
+              title="Supprimer la note"
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={1.5}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                 />
               </svg>
-            }
-            iconPosition="left"
-            onClick={() => navigate('/notes')}
-          >
-            Retour
-          </Button>
+            </button>
+          </div>
         </PageHeader>
 
         <div className="px-32 py-8">
@@ -240,6 +274,15 @@ export default function NoteEditorPage() {
         onClose={() => setIsSourceModalOpen(false)}
         source={source}
         onSave={handleSourceSave}
+      />
+
+      {/* Modal Suppression */}
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteNote}
+        noteTitle={title || 'Sans titre'}
+        isDeleting={isDeleting}
       />
     </div>
   );
