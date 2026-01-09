@@ -151,7 +151,7 @@ export default function NoteEditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#08090A] to-[#101011]">
+    <div className="min-h-screen">
       <Sidebar />
 
       <main className="ml-[240px]">

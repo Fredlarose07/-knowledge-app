@@ -35,7 +35,7 @@ export const NotesListView: React.FC<NotesListViewProps> = ({
               onClick={() => onSelectNote(note.id)}
               className="w-full text-left px-4 py-2 rounded-lg hover:bg-neutral-850 transition-colors"
             >
-              <h3 className="text-15 font-semibold text-neutral-0">
+              <h3 className="text-15 font-medium text-neutral-0">
                 {note.title || 'Sans titre'}
               </h3>
             </button>
