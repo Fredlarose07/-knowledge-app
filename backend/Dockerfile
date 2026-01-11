@@ -5,6 +5,9 @@
 # ========================================
 FROM node:22-alpine AS builder
 
+# Installer OpenSSL pour Prisma
+RUN apk add --no-cache openssl libc6-compat
+
 WORKDIR /app
 
 # Copier package files
@@ -27,6 +30,9 @@ RUN npm run build
 # STAGE 2 : Production
 # ========================================
 FROM node:22-alpine AS production
+
+# Installer OpenSSL pour Prisma (IMPORTANT en production aussi !)
+RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
 
