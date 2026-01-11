@@ -12,6 +12,8 @@ interface PageHeaderProps {
   action?: {
     label: string;
     onClick: () => void;
+    variant?: 'primary' | 'secondary' | 'ghost';
+    size?: 'default' | 'small';
   };
   children?: React.ReactNode;
 }
@@ -36,7 +38,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
       let ratio = 0;
       if (currentScroll > stickyPoint) {
-        // Le ratio commence à 0 exactement au stickyPoint
         ratio = Math.min((currentScroll - stickyPoint) / transitionDuration, 1);
       } else {
         ratio = 0;
@@ -53,10 +54,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
   const visualRatio = isScrollingUp ? Math.pow(scrollRatio, 1.2) : scrollRatio;
   
-  // CONFIGURATION DYNAMIQUE
   const currentPaddingX = 128 - (32 * visualRatio);
   const blurValue = visualRatio * 16;
-  const targetOpacity = visualRatio * 0.45; // 0 à l'état initial
+  const targetOpacity = visualRatio * 0.45;
 
   return (
     <div 
@@ -72,11 +72,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         className="relative w-full overflow-hidden"
         style={{ height: '56px' }}
       >
-        {/* LE CALQUE DE FOND (Invisible si visualRatio === 0) */}
         <div 
           className="absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-150"
           style={{
-            // On force l'opacité à 0 si on n'a pas scrollé
             opacity: visualRatio > 0 ? 1 : 0,
             background: `linear-gradient(to bottom, 
               rgba(12, 14, 15, ${targetOpacity}) 0%, 
@@ -91,7 +89,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           }}
         />
 
-        {/* LE CALQUE DE CONTENU (Toujours visible et net) */}
         <div 
           className="relative z-10 flex items-center justify-between w-full h-full"
           style={{ 
@@ -107,7 +104,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
           {action && (
             <div className="flex items-center">
-              <Button onClick={action.onClick}>
+              <Button 
+                onClick={action.onClick}
+                variant={action.variant || 'primary'}
+                size={action.size || 'default'}
+              >
                 {action.label}
               </Button>
             </div>

@@ -1,3 +1,5 @@
+// frontend/src/lib/api.ts
+
 import axios from 'axios';
 import type {
   Note,
@@ -50,6 +52,17 @@ export const notesApi = {
   // GET /notes/:id/backlinks - Notes qui mentionnent cette note
   getBacklinks: async (id: string): Promise<BacklinksResponse> => {
     const response = await api.get<BacklinksResponse>(`/notes/${id}/backlinks`);
+    return response.data;
+  },
+
+  // GET /notes/exists?title=Budget - Vérifie si une note existe
+  checkNoteExists: async (title: string): Promise<{ exists: boolean; noteId?: string }> => {
+    const response = await api.get<{ exists: boolean; noteId?: string }>(
+      '/notes/exists',
+      {
+        params: { title },
+      }
+    );
     return response.data;
   },
 };

@@ -75,17 +75,38 @@ body {
   margin-bottom: 0;
 }
 
-/* Styles pour les [[liens]] */
+/* Styles pour les [[liens]] EXISTANTS */
 .note-mention-link {
-  color: #6C78E6;
+  color: #6C78E6; /* Primary 500 - Bleu clair */
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .note-mention-link:hover {
-  color: #575BC7;
+  color: #575BC7; /* Primary 600 - Plus foncé */
   text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* Styles pour les [[liens]] INEXISTANTS (broken links) */
+.note-mention-link-broken {
+  color: #4A4E5C; /* Gris foncé */
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+}
+
+.note-mention-link-broken:hover {
+  color: #6C78E6; /* Devient bleu au hover */
+  opacity: 1;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
 
 /* Placeholder de l'éditeur Tiptap */
@@ -96,4 +117,3 @@ body {
   pointer-events: none;
   height: 0;
 }
-

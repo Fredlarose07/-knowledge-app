@@ -1,3 +1,5 @@
+// backend/src/notes/notes.service.ts
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LinksService } from './links.service';
@@ -8,11 +10,12 @@ import { UpdateNoteDto } from './dto/update-note.dto';
 export class NotesService {
   constructor(
     private prisma: PrismaService,
-    private linksService: LinksService, // ← Injecter LinksService
+    private linksService: LinksService,
   ) {}
 
   /**
    * Créer une nouvelle note
+   * IMPORTANT: userId EN PREMIER pour correspondre au controller
    */
   async create(userId: string, createNoteDto: CreateNoteDto) {
     // Créer la note
@@ -126,5 +129,29 @@ export class NotesService {
     });
 
     return { message: 'Note deleted successfully' };
+  }
+
+  /**
+   * GET /notes/exists?title=Budget
+   * Vérifie si une note existe par son titre (case-insensitive)
+   */
+  async checkNoteExists(title: string): Promise<{ exists: boolean; noteId?: string }> {
+    const note = await this.prisma.note.findFirst({
+      where: {
+        title: {
+          equals: title,
+          mode: 'insensitive',
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (note) {
+      return { exists: true, noteId: note.id };
+    }
+
+    return { exists: false };
   }
 }

@@ -8,6 +8,8 @@ import { Button } from '../components/ui/Button';
 import { NoteEditor } from '../components/editor/NoteEditor';
 import { SourceModal } from '../components/modals/SourceModal';
 import { DeleteConfirmModal } from '../components/modals/DeleteConfirmModal';
+import { LoadingSkeleton } from '../components/ui/LoadingSkeleton';
+import { clearNoteCache } from '../components/editor/NoteMentionExtension'; // ← AJOUT 1/2
 import { notesApi } from '../lib/api';
 import type { NoteDetailResponse } from '../lib/types';
 
@@ -116,6 +118,56 @@ export default function NoteEditorPage() {
     }
   };
 
+  /**
+   * Vérifie si une note existe par son titre
+   */
+  const checkNoteExists = useCallback(async (noteName: string): Promise<boolean> => {
+    try {
+      const result = await notesApi.checkNoteExists(noteName);
+      return result.exists;
+    } catch (error) {
+      console.error('Erreur vérification note:', error);
+      return false;
+    }
+  }, []);
+
+  /**
+   * Gère le clic sur un lien [[note]]
+   * - Si la note existe : navigation
+   * - Si la note n'existe pas : création automatique + navigation
+   */
+  const handleMentionClick = useCallback(async (noteName: string) => {
+    try {
+      // Vérifier si la note existe
+      const result = await notesApi.checkNoteExists(noteName);
+
+      if (result.exists && result.noteId) {
+        // Note existe → Navigation
+        navigate(`/notes/${result.noteId}`, { replace: false });
+      } else {
+        // Note n'existe pas → Création auto
+        console.log(`Création automatique de la note "${noteName}"`);
+        
+        const newNote = await notesApi.createNote({
+          title: noteName,
+          content: {
+            type: 'doc',
+            content: [{ type: 'paragraph', content: [] }],
+          },
+        });
+
+        // ← AJOUT 2/2 : Invalider le cache pour que le lien devienne bleu au retour
+        clearNoteCache(noteName);
+
+        // Navigation vers la nouvelle note
+        navigate(`/notes/${newNote.id}`, { replace: false });
+      }
+    } catch (error) {
+      console.error('Erreur lors du clic sur mention:', error);
+      alert('Erreur lors de la navigation');
+    }
+  }, [navigate]);
+
   useEffect(() => {
     return () => {
       if (saveTimerRef.current) {
@@ -135,32 +187,9 @@ export default function NoteEditorPage() {
     }).format(date);
   };
 
-  const handleMentionClick = useCallback(async (noteName: string) => {
-    try {
-      const notes = await notesApi.getAllNotes();
-      const targetNote = notes.find(
-        n => n.title.toLowerCase() === noteName.toLowerCase()
-      );
-
-      if (targetNote) {
-        navigate(`/notes/${targetNote.id}`, { replace: false });
-      } else {
-        alert(`Note "${noteName}" introuvable`);
-      }
-    } catch (error) {
-      console.error('Erreur recherche note:', error);
-    }
-  }, [navigate]);
-
+  // Utilisation du composant LoadingSkeleton
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#08090A] to-[#101011]">
-        <Sidebar />
-        <main className="ml-[240px] flex items-center justify-center min-h-screen">
-          <p className="text-neutral-500">Chargement...</p>
-        </main>
-      </div>
-    );
+    return <LoadingSkeleton variant="note-editor" />;
   }
 
   if (!note) {
@@ -172,7 +201,16 @@ export default function NoteEditorPage() {
       <Sidebar />
 
       <main className="ml-[240px]">
-        <PageHeader breadcrumbItems={[]}>
+        <PageHeader 
+          breadcrumbItems={[]}
+          action={{
+            label: source ? 'Source' : 'Ajouter une source',
+            onClick: () => setIsSourceModalOpen(true),
+            variant: 'secondary',
+            size: 'small'
+          }}
+        >
+          {/* Boutons à gauche du header */}
           <div className="flex items-center gap-2">
             <Button
               variant="secondary"
@@ -234,37 +272,16 @@ export default function NoteEditorPage() {
             Créé le {formatDate(note.createdAt)}
           </p>
 
-          {/* Éditeur */}
+          {/* Éditeur avec vérification d'existence des liens */}
           <div className="mb-16">
             <NoteEditor
               content={content}
               onChange={handleContentChange}
               onMentionClick={handleMentionClick}
+              checkNoteExists={checkNoteExists}
               placeholder="Expliquez le concept avec vos mots..."
             />
           </div>
-        </div>
-
-        {/* Footer avec bouton Source */}
-        <div className="px-32 py-6 border-t border-neutral-800">
-          <Button
-            variant="secondary"
-            size="small"
-            icon={
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                />
-              </svg>
-            }
-            iconPosition="left"
-            onClick={() => setIsSourceModalOpen(true)}
-          >
-            {source ? 'Modifier la source' : 'Ajouter une source'}
-          </Button>
         </div>
       </main>
 

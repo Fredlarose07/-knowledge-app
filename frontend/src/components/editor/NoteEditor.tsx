@@ -1,5 +1,5 @@
 /**
- * NoteEditor - Éditeur Tiptap simple avec [[liens]]
+ * NoteEditor - Éditeur Tiptap avec [[liens]] et détection existence
  */
 
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -12,16 +12,18 @@ interface NoteEditorProps {
   content: any;
   onChange: (content: any) => void;
   onMentionClick?: (noteName: string) => void;
+  checkNoteExists?: (noteName: string) => Promise<boolean>;
   editable?: boolean;
-  placeholder?: string;  // ← Ajout de la prop placeholder
+  placeholder?: string;
 }
 
 export const NoteEditor: React.FC<NoteEditorProps> = ({
   content,
   onChange,
   onMentionClick,
+  checkNoteExists,
   editable = true,
-  placeholder = "Tapez '/' pour les commandes ou commencez à écrire...",  // ← Valeur par défaut
+  placeholder = "Tapez '/' pour les commandes ou commencez à écrire...",
 }) => {
   const editor = useEditor({
     extensions: [
@@ -31,10 +33,11 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         },
       }),
       Placeholder.configure({
-        placeholder,  // ← Utilise la prop au lieu de la valeur en dur
+        placeholder,
       }),
       NoteMention.configure({
         onMentionClick,
+        checkNoteExists,
       }),
     ],
     content,

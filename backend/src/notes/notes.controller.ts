@@ -1,3 +1,5 @@
+// backend/src/notes/notes.controller.ts
+
 import {
   Controller,
   Get,
@@ -6,6 +8,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  BadRequestException,
   UseGuards,
 } from '@nestjs/common';
 import { NotesService } from './notes.service';
@@ -21,30 +25,59 @@ import type { User } from '@prisma/client';
 export class NotesController {
   constructor(
     private readonly notesService: NotesService,
-    private readonly linksService: LinksService, // ← Injecter LinksService
+    private readonly linksService: LinksService,
   ) {}
 
+  /**
+   * POST /notes - Créer une note
+   */
   @Post()
   create(@CurrentUser() user: User, @Body() createNoteDto: CreateNoteDto) {
     return this.notesService.create(user.id, createNoteDto);
   }
 
+  /**
+   * GET /notes - Liste toutes les notes
+   */
   @Get()
   findAll(@CurrentUser() user: User) {
     return this.notesService.findAll(user.id);
   }
 
-    // Nouvelle route : récupérer les backlinks
+  /**
+   * GET /notes/exists?title=Budget
+   * Vérifie si une note existe par son titre
+   * IMPORTANT: Doit être AVANT @Get(':id') sinon "exists" sera traité comme un ID
+   */
+  @Get('exists')
+  async checkNoteExists(@Query('title') title: string) {
+    if (!title) {
+      throw new BadRequestException('Le paramètre "title" est requis');
+    }
+
+    const result = await this.notesService.checkNoteExists(title);
+    return result;
+  }
+
+  /**
+   * GET /notes/:id/backlinks - Notes qui mentionnent cette note
+   */
   @Get(':id/backlinks')
   getBacklinks(@CurrentUser() user: User, @Param('id') id: string) {
     return this.linksService.getBacklinks(user.id, id);
   }
 
+  /**
+   * GET /notes/:id - Détail d'une note avec liens
+   */
   @Get(':id')
   findOne(@CurrentUser() user: User, @Param('id') id: string) {
     return this.notesService.findOne(user.id, id);
   }
 
+  /**
+   * PATCH /notes/:id - Modifier une note
+   */
   @Patch(':id')
   update(
     @CurrentUser() user: User,
@@ -54,6 +87,9 @@ export class NotesController {
     return this.notesService.update(user.id, id, updateNoteDto);
   }
 
+  /**
+   * DELETE /notes/:id - Supprimer une note
+   */
   @Delete(':id')
   remove(@CurrentUser() user: User, @Param('id') id: string) {
     return this.notesService.remove(user.id, id);
