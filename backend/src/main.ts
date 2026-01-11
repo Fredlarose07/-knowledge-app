@@ -8,19 +8,26 @@ async function bootstrap() {
   // Activer la validation des DTOs
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Retire les propriétés non définies dans les DTOs
-      forbidNonWhitelisted: true, // Rejette les requêtes avec des props inconnues
-      transform: true, // Transforme les payloads selon les DTOs
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
 
-  // Activer CORS pour le frontend
+  // ✅ CORS dynamique : localhost OU domaine Railway
+  const allowedOrigins = [
+    'http://localhost:5173',
+    process.env.FRONTEND_URL, // URL Railway du frontend
+  ].filter(Boolean);
+
   app.enableCors({
-    origin: 'http://localhost:5173', // URL du frontend
+    origin: allowedOrigins,
     credentials: true,
   });
 
-  await app.listen(3001);
-  console.log('🚀 Backend running on http://localhost:3001');
+  // ✅ Port dynamique pour Railway
+  const port = process.env.PORT || 3001;
+  await app.listen(port);
+  console.log(`🚀 Backend running on port ${port}`);
 }
 bootstrap();

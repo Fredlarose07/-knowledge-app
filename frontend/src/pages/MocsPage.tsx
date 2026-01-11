@@ -9,10 +9,10 @@ export default function SchemasPage() {
       <Sidebar />
       
       <main className="ml-[240px]">
-        <PageHeader breadcrumbItems={[{ label: 'Schemas' }]} />
+        <PageHeader breadcrumbItems={[{ label: "Moc's" }]} />
         
         <div className="px-32 py-8 flex items-center justify-center text-neutral-500">
-          <p className="text-15">Section Schemas (à venir)</p>
+          <p className="text-15">Section Moc's (à venir)</p>
         </div>
       </main>
     </div>

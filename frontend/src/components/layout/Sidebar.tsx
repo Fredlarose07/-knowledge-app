@@ -27,7 +27,7 @@ export const Sidebar: React.FC = () => {
     },
     {
       id: 'mocs',
-      label: 'Mocs',
+      label: "Moc's",
       path: '/mocs',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

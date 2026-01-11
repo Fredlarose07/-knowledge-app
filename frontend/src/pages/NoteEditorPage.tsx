@@ -1,6 +1,6 @@
 // frontend/src/pages/NoteEditorPage.tsx
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/layout/Sidebar';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -9,13 +9,15 @@ import { NoteEditor } from '../components/editor/NoteEditor';
 import { SourceModal } from '../components/modals/SourceModal';
 import { DeleteConfirmModal } from '../components/modals/DeleteConfirmModal';
 import { LoadingSkeleton } from '../components/ui/LoadingSkeleton';
-import { clearNoteCache } from '../components/editor/NoteMentionExtension'; // ← AJOUT 1/2
+import { clearNoteCache } from '../components/editor/NoteMentionExtension';
 import { notesApi } from '../lib/api';
+import { ToastContext } from '../App';
 import type { NoteDetailResponse } from '../lib/types';
 
 export default function NoteEditorPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const toast = useContext(ToastContext);
 
   const [note, setNote] = useState<NoteDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,7 @@ export default function NoteEditorPage() {
       setSource(data.source || '');
     } catch (error) {
       console.error('Erreur chargement note:', error);
-      alert('Impossible de charger la note');
+      toast?.error('Impossible de charger la note');
       navigate('/notes');
     } finally {
       setLoading(false);
@@ -64,7 +66,7 @@ export default function NoteEditorPage() {
     } catch (error) {
       console.error('Erreur sauvegarde:', error);
       setSaveStatus('idle');
-      alert('Erreur lors de la sauvegarde');
+      toast?.error('Erreur lors de la sauvegarde');
     }
   };
 
@@ -114,14 +116,11 @@ export default function NoteEditorPage() {
       navigate('/notes');
     } catch (error) {
       console.error('Erreur suppression note:', error);
-      alert('Impossible de supprimer la note');
+      toast?.error('Impossible de supprimer la note');
       setIsDeleting(false);
     }
   };
 
-  /**
-   * Vérifie si une note existe par son titre
-   */
   const checkNoteExists = useCallback(async (noteName: string): Promise<boolean> => {
     try {
       const result = await notesApi.checkNoteExists(noteName);
@@ -132,21 +131,13 @@ export default function NoteEditorPage() {
     }
   }, []);
 
-  /**
-   * Gère le clic sur un lien [[note]]
-   * - Si la note existe : navigation
-   * - Si la note n'existe pas : création automatique + navigation
-   */
   const handleMentionClick = useCallback(async (noteName: string) => {
     try {
-      // Vérifier si la note existe
       const result = await notesApi.checkNoteExists(noteName);
 
       if (result.exists && result.noteId) {
-        // Note existe → Navigation
         navigate(`/notes/${result.noteId}`, { replace: false });
       } else {
-        // Note n'existe pas → Création auto
         console.log(`Création automatique de la note "${noteName}"`);
         
         const newNote = await notesApi.createNote({
@@ -157,17 +148,14 @@ export default function NoteEditorPage() {
           },
         });
 
-        // ← AJOUT 2/2 : Invalider le cache pour que le lien devienne bleu au retour
         clearNoteCache(noteName);
-
-        // Navigation vers la nouvelle note
         navigate(`/notes/${newNote.id}`, { replace: false });
       }
     } catch (error) {
       console.error('Erreur lors du clic sur mention:', error);
-      alert('Erreur lors de la navigation');
+      toast?.error('Erreur lors de la navigation');
     }
-  }, [navigate]);
+  }, [navigate, toast]);
 
   useEffect(() => {
     return () => {
@@ -188,7 +176,6 @@ export default function NoteEditorPage() {
     }).format(date);
   };
 
-  // Utilisation du composant LoadingSkeleton
   if (loading) {
     return <LoadingSkeleton variant="note-editor" />;
   }
@@ -211,7 +198,6 @@ export default function NoteEditorPage() {
             size: 'small'
           }}
         >
-          {/* Boutons à gauche du header */}
           <div className="flex items-center gap-2">
             <Button
               variant="secondary"
@@ -250,7 +236,6 @@ export default function NoteEditorPage() {
         </PageHeader>
 
         <div className="px-32 py-8">
-          {/* Titre éditable + indicateur de sauvegarde */}
           <div className="flex items-center gap-4 mb-2">
             <input
               type="text"
@@ -268,12 +253,10 @@ export default function NoteEditorPage() {
             )}
           </div>
 
-          {/* Date de création */}
           <p className="text-13 font-medium text-[#565A64] mb-6">
             Créé le {formatDate(note.createdAt)}
           </p>
 
-          {/* Éditeur avec vérification d'existence des liens */}
           <div className="mb-16">
             <NoteEditor
               content={content}
@@ -286,7 +269,6 @@ export default function NoteEditorPage() {
         </div>
       </main>
 
-      {/* Modal Source */}
       <SourceModal
         isOpen={isSourceModalOpen}
         onClose={() => setIsSourceModalOpen(false)}
@@ -294,7 +276,6 @@ export default function NoteEditorPage() {
         onSave={handleSourceSave}
       />
 
-      {/* Modal Suppression */}
       <DeleteConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}

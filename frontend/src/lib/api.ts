@@ -1,79 +1,64 @@
 // frontend/src/lib/api.ts
-
-import axios from 'axios';
-import type {
-  Note,
-  NoteDetailResponse,
-  CreateNoteDto,
-  UpdateNoteDto,
-  BacklinksResponse,
-  User,
+import { apiClient } from './api-client';
+import type { 
+  Note, 
+  NoteDetailResponse, 
+  CreateNoteDto, 
+  UpdateNoteDto 
 } from './types';
 
-// Configuration Axios
-const api = axios.create({
-  baseURL: 'http://localhost:3001',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// API Methods
 export const notesApi = {
   // GET /notes - Liste toutes les notes
-  getAllNotes: async (): Promise<Note[]> => {
-    const response = await api.get<Note[]>('/notes');
+  async getAllNotes(): Promise<Note[]> {
+    const response = await apiClient.get('/notes');
     return response.data;
   },
 
-  // GET /notes/:id - Détail d'une note avec liens
-  getNoteById: async (id: string): Promise<NoteDetailResponse> => {
-    const response = await api.get<NoteDetailResponse>(`/notes/${id}`);
+  // GET /notes/:id - Détail d'une note
+  async getNoteById(id: string): Promise<NoteDetailResponse> {
+    const response = await apiClient.get(`/notes/${id}`);
     return response.data;
   },
 
   // POST /notes - Créer une note
-  createNote: async (data: CreateNoteDto): Promise<Note> => {
-    const response = await api.post<Note>('/notes', data);
+  async createNote(data: CreateNoteDto): Promise<Note> {
+    const response = await apiClient.post('/notes', data);
     return response.data;
   },
 
-  // PATCH /notes/:id - Modifier une note
-  updateNote: async (id: string, data: UpdateNoteDto): Promise<Note> => {
-    const response = await api.patch<Note>(`/notes/${id}`, data);
+  // PATCH /notes/:id - Mettre à jour une note
+  async updateNote(id: string, data: UpdateNoteDto): Promise<Note> {
+    const response = await apiClient.patch(`/notes/${id}`, data);
     return response.data;
   },
 
   // DELETE /notes/:id - Supprimer une note
-  deleteNote: async (id: string): Promise<void> => {
-    await api.delete(`/notes/${id}`);
+  async deleteNote(id: string): Promise<void> {
+    await apiClient.delete(`/notes/${id}`);
+  },
+
+  // GET /notes/exists?title=XXX - Vérifier si une note existe
+  async checkNoteExists(title: string): Promise<{ exists: boolean; noteId?: string }> {
+    const response = await apiClient.get('/notes/exists', {
+      params: { title },
+    });
+    return response.data;
   },
 
   // GET /notes/:id/backlinks - Notes qui mentionnent cette note
-  getBacklinks: async (id: string): Promise<BacklinksResponse> => {
-    const response = await api.get<BacklinksResponse>(`/notes/${id}/backlinks`);
-    return response.data;
-  },
-
-  // GET /notes/exists?title=Budget - Vérifie si une note existe
-  checkNoteExists: async (title: string): Promise<{ exists: boolean; noteId?: string }> => {
-    const response = await api.get<{ exists: boolean; noteId?: string }>(
-      '/notes/exists',
-      {
-        params: { title },
-      }
-    );
+  async getBacklinks(id: string): Promise<Note[]> {
+    const response = await apiClient.get(`/notes/${id}/backlinks`);
     return response.data;
   },
 };
 
-// User API
+// API Auth (hardcodé pour MVP)
 export const authApi = {
-  // GET /me - User actuel
-  getCurrentUser: async (): Promise<User> => {
-    const response = await api.get<User>('/me');
-    return response.data;
+  async getCurrentUser() {
+    return {
+      id: 'user-demo',
+      email: 'demo@knowledge.app',
+      name: 'Demo User',
+    };
   },
 };
-
-export default api;

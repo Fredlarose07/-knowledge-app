@@ -1,15 +1,17 @@
 // frontend/src/pages/NotesListPage.tsx
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/layout/Sidebar';
 import { PageHeader } from '../components/layout/PageHeader';
 import { NotesListView } from '../components/views/NotesListView';
 import { notesApi } from '../lib/api';
+import { ToastContext } from '../App';
 import type { Note } from '../lib/types';
 
 export default function NotesListPage() {
   const navigate = useNavigate();
+  const toast = useContext(ToastContext);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +26,7 @@ export default function NotesListPage() {
       setNotes(data);
     } catch (error) {
       console.error('Erreur chargement notes:', error);
-      alert('Impossible de charger les notes. Le backend tourne-t-il ?');
+      toast?.error('Impossible de charger les notes. Le backend tourne-t-il ?');
     } finally {
       setLoading(false);
     }
@@ -44,7 +46,7 @@ export default function NotesListPage() {
       navigate(`/notes/${newNote.id}`);
     } catch (error) {
       console.error('Erreur création note:', error);
-      alert('Impossible de créer la note');
+      toast?.error('Impossible de créer la note');
     }
   };
 
