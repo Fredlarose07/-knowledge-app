@@ -110,6 +110,7 @@ export default function NoteEditorPage() {
     try {
       setIsDeleting(true);
       await notesApi.deleteNote(id);
+      clearNoteCache(title);
       navigate('/notes');
     } catch (error) {
       console.error('Erreur suppression note:', error);
