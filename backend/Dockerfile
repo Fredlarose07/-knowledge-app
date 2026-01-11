@@ -31,7 +31,7 @@ RUN npm run build
 # ========================================
 FROM node:22-alpine AS production
 
-# Installer OpenSSL pour Prisma (IMPORTANT en production aussi !)
+# Installer OpenSSL pour Prisma
 RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
@@ -43,12 +43,11 @@ COPY prisma ./prisma/
 # Installer SEULEMENT les dépendances de production
 RUN npm ci --omit=dev
 
+# Générer Prisma Client en prod aussi
+RUN npx prisma generate
+
 # Copier le build depuis le stage builder
 COPY --from=builder /app/build ./build
-
-# Copier node_modules de Prisma (contient le client généré)
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Exposer le port
 EXPOSE 8080
