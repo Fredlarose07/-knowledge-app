@@ -33,3 +33,4 @@ postgres-data/
 
 # Prisma
 prisma/migrations/knowledge-app.zip
+knowledge-app.zip
