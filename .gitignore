@@ -32,4 +32,4 @@ postgres-data/
 *.db
 
 # Prisma
-prisma/migrations/
+prisma/migrations/knowledge-app.zip
