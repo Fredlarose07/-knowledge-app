@@ -1,11 +1,11 @@
 // frontend/src/lib/api.ts
-import { apiClient } from './api-client';
-import type { 
-  Note, 
-  NoteDetailResponse, 
-  CreateNoteDto, 
-  UpdateNoteDto 
-} from './types';
+import { apiClient } from './client';
+import type {
+  Note,
+  NoteDetailResponse,
+  CreateNoteDto,
+  UpdateNoteDto
+} from '../types/note.types';
 
 export const notesApi = {
   // GET /notes - Liste toutes les notes
@@ -62,3 +62,4 @@ export const authApi = {
     };
   },
 };
+
