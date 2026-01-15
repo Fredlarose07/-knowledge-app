@@ -26,6 +26,7 @@ model Note {
   title     String
   content   Json     @db.JsonB // Format Novel/Tiptap
   source    String? // Source optionnelle
+  isMOC     Boolean  @default(false) // TRUE si c'est un MOC (Map of Content)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -37,8 +38,15 @@ model Note {
   linksTo    NoteLink[] @relation("NoteLinksTo")
   linkedFrom NoteLink[] @relation("NoteLinkedFrom")
 
+  // Relations MOC (Many-to-Many)
+  // Si cette note est un MOC, elle contient des notes via mocNotes
+  mocNotes NoteMOC[] @relation("MOCContainsNotes")
+  // Cette note peut être dans plusieurs MOCs via inMOCs
+  inMOCs   NoteMOC[] @relation("NoteInMOCs")
+
   @@index([userId])
   @@index([createdAt])
+  @@index([isMOC]) // Index pour filtrer les MOCs rapidement
   @@map("notes")
 }
 
@@ -59,4 +67,23 @@ model NoteLink {
   @@index([sourceId])
   @@index([targetId])
   @@map("note_links")
+}
+
+// Table de jointure pour les MOCs (Many-to-Many)
+model NoteMOC {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  // Note qui est un MOC (isMOC = true)
+  mocId String
+  moc   Note   @relation("MOCContainsNotes", fields: [mocId], references: [id], onDelete: Cascade)
+
+  // Note contenue dans le MOC
+  noteId String
+  note   Note   @relation("NoteInMOCs", fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@unique([mocId, noteId]) // Éviter les doublons
+  @@index([mocId])
+  @@index([noteId])
+  @@map("note_mocs")
 }
