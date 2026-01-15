@@ -8,7 +8,7 @@ interface MocCardProps {
 
 export function MocCard({ moc, onClick, onDelete }: MocCardProps) {
   const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Empêcher le clic sur la carte
+    e.stopPropagation();
     onDelete();
   };
 
@@ -17,7 +17,6 @@ export function MocCard({ moc, onClick, onDelete }: MocCardProps) {
       onClick={onClick}
       className="bg-neutral-900 border border-neutral-800 rounded-lg p-6 hover:border-primary-500 transition-colors cursor-pointer group"
     >
-      {/* Header avec titre et bouton delete */}
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-medium text-neutral-100 group-hover:text-primary-500 transition-colors">
           {moc.title}
@@ -31,14 +30,29 @@ export function MocCard({ moc, onClick, onDelete }: MocCardProps) {
         </button>
       </div>
 
-      {/* Metadata */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm text-neutral-400">
           <span>📝</span>
           <span>
-            {moc.noteCount} note{moc.noteCount > 1 ? 's' : ''}
+            {moc.noteCount.total} note{moc.noteCount.total > 1 ? 's' : ''}
           </span>
         </div>
+
+        {moc.noteCount.total > 0 && (
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-green-500">
+              {moc.noteCount.created} créée{moc.noteCount.created > 1 ? 's' : ''}
+            </span>
+            {moc.noteCount.pending > 0 && (
+              <>
+                <span className="text-neutral-700">•</span>
+                <span className="text-neutral-500">
+                  {moc.noteCount.pending} en attente
+                </span>
+              </>
+            )}
+          </div>
+        )}
 
         {moc.source && (
           <div className="flex items-center gap-2 text-sm text-neutral-500">
