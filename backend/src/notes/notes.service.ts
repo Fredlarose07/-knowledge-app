@@ -24,7 +24,7 @@ export class NotesService {
         title: createNoteDto.title,
         content: createNoteDto.content,
         source: createNoteDto.source,
-        userId,
+        userId
       },
     });
 
@@ -38,18 +38,21 @@ export class NotesService {
    * Récupérer toutes les notes d'un user
    */
   async findAll(userId: string) {
-    return this.prisma.note.findMany({
-      where: { userId },
-      orderBy: { updatedAt: 'desc' },
-      select: {
-        id: true,
-        title: true,
-        source: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-  }
+  return this.prisma.note.findMany({
+    where: { 
+      userId,
+      isMOC: false  // ← AJOUTE CETTE LIGNE ICI
+    },
+    orderBy: { updatedAt: 'desc' },
+    select: {
+      id: true,
+      title: true,
+      source: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+}
 
   /**
    * Récupérer une note par son ID

@@ -14,77 +14,64 @@ import { UpdateMocDto } from './dto/update-moc.dto';
 import { AddNoteToMocDto } from './dto/add-note-to-moc.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/user.decorator';
+import type { User } from '@prisma/client';
 
 @Controller('mocs')
 @UseGuards(AuthGuard)
 export class MocsController {
   constructor(private readonly mocsService: MocsService) {}
 
-  /**
-   * GET /mocs - Liste tous les MOCs
-   */
   @Get()
-  findAll(@CurrentUser('id') userId: string) {
+  findAll(@CurrentUser() user: User) {
+    const userId = typeof user === 'object' ? user.id : user;
     return this.mocsService.findAll(userId);
   }
 
-  /**
-   * POST /mocs - Créer un nouveau MOC
-   */
   @Post()
-  create(@CurrentUser('id') userId: string, @Body() createMocDto: CreateMocDto) {
+  create(@CurrentUser() user: User, @Body() createMocDto: CreateMocDto) {
+    const userId = typeof user === 'object' ? user.id : user;
     return this.mocsService.create(userId, createMocDto);
   }
 
-  /**
-   * GET /mocs/:id - Récupérer un MOC avec ses notes
-   */
   @Get(':id')
-  findOne(@CurrentUser('id') userId: string, @Param('id') id: string) {
+  findOne(@CurrentUser() user: User, @Param('id') id: string) {
+    const userId = typeof user === 'object' ? user.id : user;
     return this.mocsService.findOne(userId, id);
   }
 
-  /**
-   * PUT /mocs/:id - Mettre à jour un MOC
-   */
   @Put(':id')
   update(
-    @CurrentUser('id') userId: string,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() updateMocDto: UpdateMocDto,
   ) {
+    const userId = typeof user === 'object' ? user.id : user;
     return this.mocsService.update(userId, id, updateMocDto);
   }
 
-  /**
-   * DELETE /mocs/:id - Supprimer un MOC
-   */
   @Delete(':id')
-  remove(@CurrentUser('id') userId: string, @Param('id') id: string) {
+  remove(@CurrentUser() user: User, @Param('id') id: string) {
+    const userId = typeof user === 'object' ? user.id : user;
     return this.mocsService.remove(userId, id);
   }
 
-  /**
-   * POST /mocs/:mocId/notes - Ajouter une note au MOC
-   */
   @Post(':mocId/notes')
   addNote(
-    @CurrentUser('id') userId: string,
+    @CurrentUser() user: User,
     @Param('mocId') mocId: string,
     @Body() addNoteDto: AddNoteToMocDto,
   ) {
+    const userId = typeof user === 'object' ? user.id : user;
     return this.mocsService.addNote(userId, mocId, addNoteDto.noteId);
   }
 
-  /**
-   * DELETE /mocs/:mocId/notes/:noteId - Retirer une note du MOC
-   */
   @Delete(':mocId/notes/:noteId')
   removeNote(
-    @CurrentUser('id') userId: string,
+    @CurrentUser() user: User,
     @Param('mocId') mocId: string,
     @Param('noteId') noteId: string,
   ) {
+    const userId = typeof user === 'object' ? user.id : user;
     return this.mocsService.removeNote(userId, mocId, noteId);
   }
 }

@@ -14,32 +14,96 @@ export class MocsService {
     const mocs = await this.prisma.note.findMany({
       where: {
         userId,
-        isMOC: true, // Filtrer uniquement les MOCs
+        isMOC: true,
       },
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
         title: true,
+        content: true,
         source: true,
         createdAt: true,
         updatedAt: true,
-        _count: {
-          select: {
-            mocNotes: true, // Nombre de notes dans ce MOC
-          },
-        },
       },
     });
 
-    // Formatter pour renvoyer noteCount au lieu de _count
-    return mocs.map((moc) => ({
-      id: moc.id,
-      title: moc.title,
-      source: moc.source,
-      createdAt: moc.createdAt,
-      updatedAt: moc.updatedAt,
-      noteCount: moc._count.mocNotes,
-    }));
+    // Pour chaque MOC, extraire et compter les liens [[note]]
+    return await Promise.all(
+      mocs.map(async (moc) => {
+        const noteLinks = this.extractNoteLinks(moc.content);
+        
+        if (noteLinks.length === 0) {
+          return {
+            id: moc.id,
+            title: moc.title,
+            source: moc.source,
+            createdAt: moc.createdAt,
+            updatedAt: moc.updatedAt,
+            noteCount: {
+              total: 0,
+              created: 0,
+              pending: 0,
+            },
+          };
+        }
+
+        // Vérifier combien de ces notes existent
+        const existingNotes = await this.prisma.note.findMany({
+          where: {
+            userId,
+            title: { in: noteLinks },
+            isMOC: false,
+          },
+          select: { title: true },
+        });
+
+        const existingTitles = new Set(existingNotes.map(n => n.title));
+        const createdCount = noteLinks.filter(title => existingTitles.has(title)).length;
+        const totalCount = noteLinks.length;
+
+        return {
+          id: moc.id,
+          title: moc.title,
+          source: moc.source,
+          createdAt: moc.createdAt,
+          updatedAt: moc.updatedAt,
+          noteCount: {
+            total: totalCount,
+            created: createdCount,
+            pending: totalCount - createdCount,
+          },
+        };
+      })
+    );
+  }
+
+  /**
+   * Helper pour extraire les liens [[note]] du contenu JSON
+   */
+  private extractNoteLinks(content: any): string[] {
+    const links: string[] = [];
+    const regex = /\[\[([^\]]+)\]\]/g;
+
+    const traverse = (node: any) => {
+      if (!node) return;
+
+      if (node.type === 'text' && node.text) {
+        let match;
+        regex.lastIndex = 0;
+        while ((match = regex.exec(node.text)) !== null) {
+          if (!links.includes(match[1])) {
+            links.push(match[1]);
+          }
+        }
+      }
+
+      if (node.content && Array.isArray(node.content)) {
+        node.content.forEach(traverse);
+      }
+    };
+
+    traverse(content);
+    return links;
   }
 
   /**
@@ -49,9 +113,9 @@ export class MocsService {
     return this.prisma.note.create({
       data: {
         title: createMocDto.title,
-        content: createMocDto.content || { type: 'doc', content: [] }, // Contenu vide par défaut
+        content: createMocDto.content || { type: 'doc', content: [] },
         source: createMocDto.source,
-        isMOC: true, // Important : marquer comme MOC
+        isMOC: true,
         userId,
       },
     });
@@ -65,7 +129,7 @@ export class MocsService {
       where: {
         id,
         userId,
-        isMOC: true, // Vérifier que c'est bien un MOC
+        isMOC: true,
       },
       include: {
         mocNotes: {
@@ -88,11 +152,10 @@ export class MocsService {
       throw new NotFoundException(`MOC with ID ${id} not found`);
     }
 
-    // Formatter la réponse pour simplifier la structure
     return {
       ...moc,
       notes: moc.mocNotes.map((mn) => mn.note),
-      mocNotes: undefined, // Retirer mocNotes de la réponse
+      mocNotes: undefined,
     };
   }
 
@@ -100,7 +163,6 @@ export class MocsService {
    * PUT /mocs/:id - Mettre à jour un MOC
    */
   async update(userId: string, id: string, updateMocDto: UpdateMocDto) {
-    // Vérifier que le MOC existe
     await this.findOne(userId, id);
 
     return this.prisma.note.update({
@@ -117,10 +179,8 @@ export class MocsService {
    * DELETE /mocs/:id - Supprimer un MOC
    */
   async remove(userId: string, id: string) {
-    // Vérifier que le MOC existe
     await this.findOne(userId, id);
 
-    // Supprimer le MOC (les relations NoteMOC seront supprimées automatiquement grâce au cascade)
     await this.prisma.note.delete({
       where: { id },
     });
@@ -132,15 +192,13 @@ export class MocsService {
    * POST /mocs/:mocId/notes - Ajouter une note au MOC
    */
   async addNote(userId: string, mocId: string, noteId: string) {
-    // Vérifier que le MOC existe
-    const moc = await this.findOne(userId, mocId);
+    await this.findOne(userId, mocId);
 
-    // Vérifier que la note existe et appartient au user
     const note = await this.prisma.note.findFirst({
       where: {
         id: noteId,
         userId,
-        isMOC: false, // Une note normale (pas un MOC dans un MOC pour l'instant)
+        isMOC: false,
       },
     });
 
@@ -148,7 +206,6 @@ export class MocsService {
       throw new NotFoundException(`Note with ID ${noteId} not found`);
     }
 
-    // Vérifier si la relation existe déjà
     const existingRelation = await this.prisma.noteMOC.findUnique({
       where: {
         mocId_noteId: {
@@ -162,7 +219,6 @@ export class MocsService {
       throw new BadRequestException('Note is already in this MOC');
     }
 
-    // Créer la relation
     await this.prisma.noteMOC.create({
       data: {
         mocId,
@@ -177,10 +233,8 @@ export class MocsService {
    * DELETE /mocs/:mocId/notes/:noteId - Retirer une note du MOC
    */
   async removeNote(userId: string, mocId: string, noteId: string) {
-    // Vérifier que le MOC existe
     await this.findOne(userId, mocId);
 
-    // Supprimer la relation
     const relation = await this.prisma.noteMOC.findUnique({
       where: {
         mocId_noteId: {
