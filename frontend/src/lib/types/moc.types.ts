@@ -4,7 +4,11 @@ export interface MOC {
   source: string | null;
   createdAt: string;
   updatedAt: string;
-  noteCount: number;
+  noteCount: {
+    total: number;
+    created: number;
+    pending: number;
+  };
 }
 
 export interface MOCNote {
@@ -18,7 +22,7 @@ export interface MOCNote {
 export interface MOCDetail {
   id: string;
   title: string;
-  content: any; // JSON (format Tiptap)
+  content: any;
   source: string | null;
   createdAt: string;
   updatedAt: string;

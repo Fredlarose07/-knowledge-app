@@ -3,7 +3,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import NotesListPage from './pages/NotesListPage';
 import NoteEditorPage from './pages/NoteEditorPage';
-import MocsPage from './pages/MocsPage';
+import MocsListPage from './pages/mocs/MocsListPage';
+import MocEditorPage from './pages/mocs/MocEditorPage';
 import SchemasPage from './pages/SchemasPage';
 import { ToastContainer } from './components/ui/ToastContainer';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -24,7 +25,8 @@ function App() {
             <Route path="/" element={<Navigate to="/notes" replace />} />
             <Route path="/notes" element={<NotesListPage />} />
             <Route path="/notes/:id" element={<NoteEditorPage />} />
-            <Route path="/mocs" element={<MocsPage />} />
+            <Route path="/mocs" element={<MocsListPage />} />
+            <Route path="/mocs/:id" element={<MocEditorPage />} />
             <Route path="/schemas" element={<SchemasPage />} />
             <Route path="*" element={<Navigate to="/notes" replace />} />
           </Routes>
