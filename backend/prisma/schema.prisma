@@ -15,7 +15,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  notes Note[]
+  notes   Note[]
+  reviews Review[]
 
   @@map("users")
 }
@@ -24,29 +25,26 @@ model User {
 model Note {
   id        String   @id @default(uuid())
   title     String
-  content   Json     @db.JsonB // Format Novel/Tiptap
-  source    String? // Source optionnelle
-  isMOC     Boolean  @default(false) // TRUE si c'est un MOC (Map of Content)
+  content   Json     @db.JsonB
+  source    String?
+  isMOC     Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Liens bidirectionnels entre notes
   linksTo    NoteLink[] @relation("NoteLinksTo")
   linkedFrom NoteLink[] @relation("NoteLinkedFrom")
 
-  // Relations MOC (Many-to-Many)
-  // Si cette note est un MOC, elle contient des notes via mocNotes
   mocNotes NoteMOC[] @relation("MOCContainsNotes")
-  // Cette note peut être dans plusieurs MOCs via inMOCs
   inMOCs   NoteMOC[] @relation("NoteInMOCs")
+
+  review Review?
 
   @@index([userId])
   @@index([createdAt])
-  @@index([isMOC]) // Index pour filtrer les MOCs rapidement
+  @@index([isMOC])
   @@map("notes")
 }
 
@@ -55,15 +53,13 @@ model NoteLink {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
-  // Note source (celle qui contient le lien)
   sourceId String
   source   Note   @relation("NoteLinksTo", fields: [sourceId], references: [id], onDelete: Cascade)
 
-  // Note cible (celle qui est référencée)
   targetId String
   target   Note   @relation("NoteLinkedFrom", fields: [targetId], references: [id], onDelete: Cascade)
 
-  @@unique([sourceId, targetId]) // Éviter les doublons
+  @@unique([sourceId, targetId])
   @@index([sourceId])
   @@index([targetId])
   @@map("note_links")
@@ -74,16 +70,41 @@ model NoteMOC {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
-  // Note qui est un MOC (isMOC = true)
   mocId String
   moc   Note   @relation("MOCContainsNotes", fields: [mocId], references: [id], onDelete: Cascade)
 
-  // Note contenue dans le MOC
   noteId String
   note   Note   @relation("NoteInMOCs", fields: [noteId], references: [id], onDelete: Cascade)
 
-  @@unique([mocId, noteId]) // Éviter les doublons
+  @@unique([mocId, noteId])
   @@index([mocId])
   @@index([noteId])
   @@map("note_mocs")
+}
+
+// ✅ NOUVEAU : Review pour répétition espacée (SM-2)
+model Review {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  noteId String @unique
+  note   Note   @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Paramètres SM-2
+  easiness    Float    @default(2.5)  // Facteur E (1.3 à 2.5)
+  interval    Int      @default(0)    // Jours avant prochaine révision
+  repetitions Int      @default(0)    // Nombre de révisions réussies
+  nextReview  DateTime                // Date de la prochaine révision
+
+  // Historique
+  lastQuality Int?      // Dernière note (0-5)
+  lastReview  DateTime? // Dernière révision effectuée
+
+  @@index([userId, nextReview])
+  @@map("reviews")
 }

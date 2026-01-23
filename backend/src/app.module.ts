@@ -5,11 +5,15 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { NotesModule } from './notes/notes.module';
 import { MocsModule } from './mocs/mocs.module';
+import { ReviewsModule } from './reviews/reviews.module'; // ✅ NOUVEAU
 
 @Module({
   imports: [
-    PrismaModule,  // Global module pour Prisma
-    AuthModule, NotesModule, MocsModule,    // Module d'authentification
+    PrismaModule,
+    AuthModule,
+    NotesModule,
+    MocsModule,
+    ReviewsModule, // ✅ NOUVEAU
   ],
   controllers: [AppController],
   providers: [AppService],
