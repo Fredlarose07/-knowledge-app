@@ -10,6 +10,8 @@ import { ToastContainer } from './components/ui/ToastContainer';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useToast } from './hooks/useToast';
 import { createContext } from 'react';
+import ReviewsPage from './pages/ReviewsPage';
+import ReviewLearnPage from './pages/ReviewLearnPage';
 
 // Context pour partager les toasts dans toute l'app
 export const ToastContext = createContext<ReturnType<typeof useToast> | null>(null);
@@ -28,6 +30,8 @@ function App() {
             <Route path="/mocs" element={<MocsListPage />} />
             <Route path="/mocs/:id" element={<MocEditorPage />} />
             <Route path="/schemas" element={<SchemasPage />} />
+            <Route path="/reviews" element={<ReviewsPage />} />
+            <Route path="/reviews/:noteId" element={<ReviewLearnPage />} />
             <Route path="*" element={<Navigate to="/notes" replace />} />
           </Routes>
         </BrowserRouter>

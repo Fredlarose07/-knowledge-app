@@ -10,7 +10,7 @@ import { SourceModal } from '../components/modals/SourceModal';
 import { DeleteConfirmModal } from '../components/modals/DeleteConfirmModal';
 import { LoadingSkeleton } from '../components/ui/LoadingSkeleton';
 import { clearNoteCache } from '../components/editor/NoteMentionExtension';
-import { notesApi } from '../lib/api';
+import { notesApi, reviewsApi } from '../lib/api';
 import { ToastContext } from '../App';
 import type { NoteDetailResponse } from '../lib/types';
 
@@ -28,6 +28,7 @@ export default function NoteEditorPage() {
   const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [reviewEnabled, setReviewEnabled] = useState(false);
 
   const saveTimerRef = useRef<number | null>(null);
   const titleSaveTimerRef = useRef<number | null>(null);
@@ -38,6 +39,7 @@ export default function NoteEditorPage() {
       return;
     }
     loadNote(id);
+    loadReviewStatus(id);
   }, [id, navigate]);
 
   const loadNote = async (noteId: string) => {
@@ -54,6 +56,34 @@ export default function NoteEditorPage() {
       navigate('/notes');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadReviewStatus = async (noteId: string) => {
+    try {
+      const status = await reviewsApi.getReviewStatus(noteId);
+      setReviewEnabled(!!status);
+    } catch (error) {
+      console.error('Erreur chargement review:', error);
+    }
+  };
+
+  const handleToggleReview = async () => {
+    if (!id) return;
+    
+    try {
+      if (reviewEnabled) {
+        await reviewsApi.disableReview(id);
+        setReviewEnabled(false);
+        toast?.success('Révision désactivée');
+      } else {
+        await reviewsApi.enableReview(id);
+        setReviewEnabled(true);
+        toast?.success('Révision activée');
+      }
+    } catch (error) {
+      console.error('Erreur toggle review:', error);
+      toast?.error('Erreur lors de la modification');
     }
   };
 
@@ -216,6 +246,14 @@ export default function NoteEditorPage() {
               onClick={() => navigate('/notes')}
             >
               Retour
+            </Button>
+
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={handleToggleReview}
+            >
+              {reviewEnabled ? '✓ Révision activée' : 'Activer révision'}
             </Button>
             
             <button
